@@ -1,23 +1,18 @@
-#!groovy
-
 pipeline {
-  agent none
-  stages {
-    stage('Maven Install') {
-      agent {
-        docker {
-          image 'maven:3.5.0'
+    agent { label 'arthur' }
+    stages {
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t spring-petclinic:latest .'
+            }
         }
-      }
-      steps {
-        sh 'mvn clean install'
-      }
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker rm -f spring-petclinic || true
+                    docker run -d --name spring-petclinic -p 8080:8080 --restart unless-stopped spring-petclinic:latest
+                '''
+            }
+        }
     }
-    stage('Docker Build') {
-      agent any
-      steps {
-        sh 'docker build -t denisjackman/spring-petclinic:latest .'
-      }
-    }
-  }
 }
